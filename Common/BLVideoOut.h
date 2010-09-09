@@ -77,6 +77,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 @property (nonatomic) BOOL		extScreenActive;
 @property (readonly) BOOL		canProvideVideoOut;
 
+// non-singleton way 
+// display a separate VC on the 2nd monitor
+- (id)initWithViewController:(UIViewController *)extViewController;
+
 // use this to access it all - singletoney goodness
 + (BLVideoOut *) sharedVideoOut;
 

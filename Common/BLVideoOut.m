@@ -48,6 +48,7 @@
 
 @interface BLVideoOut()
 - (void)startExternalScreen;
+- (void)startExternalScreenWithViewController:(UIViewController *)extViewController;
 - (void)terminateExternalScreen;
 - (void)determineIfCanProvideVideoOut;
 @end
@@ -87,6 +88,38 @@ static BLVideoOut * _sharedVideoOut;
 		if( [[UIScreen screens] count] > 1 )
 		{
 			[self startExternalScreen];
+		}
+    }
+    return self;
+}
+
+// JF Ugly but a quick hack
+// I didn't want to mess around with the original code too much
+- (id)initWithViewController:(UIViewController *)extViewController {
+    if (self = [super init]) {
+        // Initialization code
+		extScreenActive = NO;
+		
+		[self determineIfCanProvideVideoOut];
+		
+		if( !canProvideVideoOut ) return self; // return before we crash
+		
+		
+		// register to listen for screen count notifications
+		[[NSNotificationCenter defaultCenter] addObserver:self 
+												 selector:@selector(screenDidConnect) 
+													 name:UIScreenDidConnectNotification 
+												   object:nil];
+		
+		[[NSNotificationCenter defaultCenter] addObserver:self 
+												 selector:@selector(screenDidDisconnect) 
+													 name:UIScreenDidDisconnectNotification 
+												   object:nil];
+		
+		// start it up, if it's already connected
+		if( [[UIScreen screens] count] > 1 )
+		{
+			[self startExternalScreenWithViewController:extViewController];
 		}
     }
     return self;
@@ -212,6 +245,30 @@ static BLVideoOut * _sharedVideoOut;
 	self.extWindow.screen = extScreen;
 	[self.extWindow.screen setCurrentMode:uism];  // not intuitive, but necessary
 	[self.extWindow makeKeyAndVisible];
+	extScreenActive = YES;	
+}
+
+// Added by JF
+// This demonstrates how to use an external view controller (or with a small modification a view
+// owned by an existing VC) on the second screen
+- (void)startExternalScreenWithViewController:(UIViewController *)extViewController {
+	displayLink = nil; // not using this right now
+	UIScreen *extScreen = [[UIScreen screens] objectAtIndex:1];
+	NSArray *modes = [extScreen availableModes];
+#ifdef kVideoPreferLowRes
+	UIScreenMode * uism = [modes objectAtIndex:0];
+#else
+	UIScreenMode * uism = [modes lastObject];
+#endif
+	
+	self.extWindow = [[UIWindow alloc] initWithFrame:[extScreen bounds]];
+	
+	[extViewController.view setFrame:[extScreen bounds]];
+	[extWindow addSubview:extViewController.view];
+	
+	self.extWindow.screen = extScreen;
+	[self.extWindow.screen setCurrentMode:uism];
+	[extWindow makeKeyAndVisible];
 	extScreenActive = YES;	
 }
 

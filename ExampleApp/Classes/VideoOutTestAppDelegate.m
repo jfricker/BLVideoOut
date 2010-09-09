@@ -8,11 +8,12 @@
 
 #import "VideoOutTestAppDelegate.h"
 #import "VideoOutTestViewController.h"
+#import "ExtMonitorViewController.h"
 
 @implementation VideoOutTestAppDelegate
 
 @synthesize window;
-@synthesize viewController;
+@synthesize viewController, extViewController;
 
 #pragma mark -
 #pragma mark base stuff
@@ -23,7 +24,12 @@
     [window addSubview:viewController.view];
     [window makeKeyAndVisible];
 	
+#ifdef OLDWAY
 	[BLVideoOut sharedVideoOut].delegate = self;
+#else
+	videoOut = [[BLVideoOut alloc] initWithViewController:extViewController];
+	videoOut.delegate = self;
+#endif
 	return YES;
 }
 
